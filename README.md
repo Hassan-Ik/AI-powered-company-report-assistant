@@ -59,3 +59,7 @@ npm run dev
 * View AI-generated summary, key metrics, insights, and review
 
 
+Demo Frontend Link: https://ai-powered-company-report-assistant-plum.vercel.app/
+
+
+
