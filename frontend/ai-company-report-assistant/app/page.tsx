@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Loader2, Upload, FileText, MessageSquare } from "lucide-react";
+import { ReactNode } from "react";
 
 type Message = {
   role: "user" | "assistant";
-  content: string | JSX.Element;
+  content: string | ReactNode;
 };
 
 export default function Home() {
@@ -39,7 +40,7 @@ export default function Home() {
     if (text) formData.append("text", text);
     if (guidelinesText) formData.append("guidelines_text", guidelinesText);
 
-    const res = await fetch("http://localhost:8000/analyze", {
+    const res = await fetch("/api/proxy", {
       method: "POST",
       body: formData,
     });
