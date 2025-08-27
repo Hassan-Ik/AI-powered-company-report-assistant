@@ -26,7 +26,7 @@ client = OpenAI(api_key=api_key)
 # Enhanced CORS for deployment
 origins = [
     "http://localhost:3000",
-    "http://192.168.1.214:3000"
+    "https://ai-powered-company-report-assistant-plum.vercel.app/"
 ]
 
 app.add_middleware(
