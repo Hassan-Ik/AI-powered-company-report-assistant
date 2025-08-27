@@ -1,0 +1,97 @@
+Case Study Proposal: AI Powered Sustainability Assistant
+
+Why
+	•	Companies publish long sustainability reports full of jargon, making it hard to extract useful insights.
+	•	Teams, investors, and even employees struggle to find the actual numbers (emissions, energy savings, commitments).
+	•	A lightweight AI tool can instantly summarise key metrics and reframe reports in plain, actionable language.
+
+👉 This makes sustainability transparent, accessible, and measurable.
+
+⸻
+
+What
+An AI-powered Sustainability Assistant prototype that:
+	1.	Accepts a sustainability/ESG report (PDF or pasted text).
+	2.	Extracts key metrics (e.g., carbon footprint, energy reduction targets, % renewable energy).
+	3.	Summarises commitments & progress into bullet points.
+	4.	(Stretch) Generates a plain English “one-page” summary for employees/investors.
+
+⸻
+
+Who
+	•	Primary users: ESG teams, sustainability officers, consultants.
+	•	Secondary users: Investors, employees, NGOs, regulators.
+	•	Impact: Promotes accountability & trust by making reports digestible.
+
+⸻
+
+How
+	•	Core AI:
+	•	Use LLM (OpenAI/Claude) for summarisation + extraction.
+	•	Prompt for structured outputs: “Extract metrics and commitments as JSON.”
+	•	Frontend:
+	•	Next.js/React simple UI → upload text or paste report.
+	•	Output: 2 tabs → Metrics + Plain Summary.
+	•	Backend:
+	•	Simple Node/Python API to call LLM.
+	•	PDF parsing (if you want stretch goal) with PyPDF2 or pdf.js.
+	•	Deployment: Vercel/Netlify for frontend demo.
+	•	Scope for 1-day build: Paste text (instead of full PDF upload) → summarise & extract metrics.
+
+⸻
+
+✨ Outcome
+A working demo that shows how Lunim could help organisations decode sustainability data with AI, making impact measurable and accessible.
+
+⸻
+
+🕐 One-Day Build Plan (8 Hours)
+
+Hour 1 — Setup
+	•	Sketch wireframe (upload/paste box + results panel).
+	•	Init Next.js app + GitHub repo.
+
+Hour 2 — Text Input & API Call
+	•	Build frontend form → send text to backend.
+	•	Connect LLM (OpenAI/Claude).
+
+Hour 3 — Metric Extraction
+	•	Prompt LLM:
+“From this text, extract sustainability metrics (CO₂ emissions, % renewable energy, goals) and return in JSON format.”
+	•	Display metrics in simple table.
+
+Hour 4 — Plain Summary
+	•	Prompt LLM to generate a human-readable summary:
+“Summarise this report in 5 bullet points, using simple language for non-experts.”
+	•	Display in a “Summary” panel.
+
+Hour 5 — UI Polish
+	•	Two tabs or sections: Metrics / Summary.
+	•	Add clean Lunim-style design (dark/light mode, big readable text).
+
+Hour 6 — Deployment
+	•	Push repo → deploy frontend on Vercel.
+	•	Test with sample sustainability report text.
+
+Hour 7 — Documentation
+	•	Write README (setup, features).
+	•	Save screenshots: wireframe → build → final demo.
+
+Hour 8 — Submission Prep
+	•	Finalise Why/What/Who/How doc.
+	•	Share demo link + GitHub repo.
+	•	Package screenshots/notes into submission.
+
+⸻
+
+✅ Deliverables Recap
+	1.	Summary doc (done ✅).
+	2.	Prototype demo (paste report → see metrics + summary).
+	3.	GitHub repo with README + screenshots.
+	4.	Submission package: Demo link + repo + doc + screenshots.
+
+⸻
+
+👉 This is safe (no legal/medical risk), unique (not overdone), and impactful — Lunim will love it.
+
+Would you like me to also draft the exact LLM prompts + minimal code snippets (for metric extraction & plain summary), so you can plug them in and save time during the build?
