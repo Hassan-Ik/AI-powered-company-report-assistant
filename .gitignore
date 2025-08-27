@@ -29,6 +29,7 @@ MANIFEST
 # Ignore .env
 
 /backend/.env
+/frontend/.env.local
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
