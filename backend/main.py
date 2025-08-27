@@ -11,8 +11,8 @@ import time
 load_dotenv()
 
 app = FastAPI(
-    title="AI Report Assistant API",
-    description="Lunim Innovation Studio - AI-powered company report analysis and summarization",
+    title="AI Powered Company Report Assistant",
+    description="AI powered report summarization and review tool",
     version="1.0.0"
 )
 
@@ -26,9 +26,7 @@ client = OpenAI(api_key=api_key)
 # Enhanced CORS for deployment
 origins = [
     "http://localhost:3000",
-    "http://192.168.1.214:3000",
-    "https://*.vercel.app",
-    "https://*.netlify.app"
+    "http://192.168.1.214:3000"
 ]
 
 app.add_middleware(
@@ -41,51 +39,37 @@ app.add_middleware(
 
 class ReportAnalysis(BaseModel):
     company_name: Optional[str] = None
+    report_type: Optional[str] = None
     year: Optional[str] = None
-    target_year: Optional[str] = None
-    key_metrics: Dict[str, Any] = {}
-    financial_health_score: Optional[int] = None
-    actionable_insights: List[str] = []
-    risk_factors: List[str] = []
-    opportunities: List[str] = []
+    important_metrics: Dict[str, Any] = {}
     summary: str = ""
+    review: str = ""
     processing_time: float = 0.0
 
 @app.get("/")
 async def root():
     return {
-        "message": "🚀 Lunim AI Report Assistant - Ready to analyze!",
-        "endpoints": {
-            "/analyze": "POST - Upload and analyze company reports",
-            "/health": "GET - API health check",
-            "/demo": "GET - Get demo data"
-        }
+        "message": "Wrong Site!"
     }
 
-@app.get("/health")
-async def health_check():
-    return {"status": "healthy", "timestamp": time.time()}
 
 @app.get("/demo")
 async def get_demo_data():
     """Demo endpoint showing sample analysis results"""
     return {
         "sample_analysis": {
-            "company_name": "TechCorp Inc.",
-            "year": "2024",
-            "financial_health_score": 78,
-            "key_metrics": {
-                "revenue": "$45.2M",
-                "growth_rate": "23%",
-                "profit_margin": "12.5%",
-                "customer_satisfaction": "4.2/5"
+            "company_name": "TechFlow Solutions",
+            "report_type": "Quarterly Performance Report",
+            "year": "Q3 2024",
+            "important_metrics": {
+                "Total Revenue": "$12.4M",
+                "Customer Base": "45,000 users",
+                "Monthly Growth": "8.2%",
+                "Customer Satisfaction": "4.3/5",
+                "Team Size": "127 employees"
             },
-            "actionable_insights": [
-                "Focus on expanding into emerging markets for 25% growth potential",
-                "Optimize operational costs to improve profit margins by 3-5%",
-                "Invest in customer retention programs to boost satisfaction scores"
-            ],
-            "summary": "Strong growth trajectory with solid fundamentals and clear expansion opportunities."
+            "summary": "TechFlow Solutions reported strong Q3 2024 performance with $12.4M revenue and 45,000 active users. The company maintained steady 8.2% monthly growth while achieving high customer satisfaction scores. The team expanded to 127 employees to support continued growth.",
+            "review": "The report demonstrates solid business fundamentals with consistent growth metrics. Revenue figures align well with user acquisition data, suggesting healthy unit economics. Customer satisfaction scores above 4.0 indicate strong product-market fit. The expansion of the team appears strategic and proportional to growth. However, the report could benefit from more detailed breakdown of revenue sources and clearer projections for Q4. Overall, this represents a well-structured quarterly report with positive indicators across key business areas."
         }
     }
 
@@ -104,134 +88,129 @@ def extract_pdf_text(pdf_bytes: bytes) -> str:
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"PDF processing failed: {str(e)}")
 
-def calculate_health_score(metrics: Dict[str, Any]) -> int:
-    """Simple algorithm to calculate financial health score"""
-    score = 50  # Base score
-    
-    # Basic scoring logic (can be enhanced)
-    for key, value in metrics.items():
-        if isinstance(value, str) and '%' in value:
-            try:
-                percentage = float(value.replace('%', ''))
-                if 'growth' in key.lower() and percentage > 10:
-                    score += min(20, percentage)
-                elif 'margin' in key.lower() and percentage > 5:
-                    score += min(15, percentage)
-            except ValueError:
-                pass
-    
-    return min(100, max(0, int(score)))
 
 async def analyze_with_ai(content: str, guidelines: str = "") -> Dict[str, Any]:
-    """Enhanced AI analysis with structured prompts"""
-    
-    # Enhanced metrics extraction prompt
-    metrics_prompt = f"""
-    You are a financial analyst AI. Extract key information from this company report and return ONLY valid JSON:
+    # Metrics extraction prompt
+    prompt_metrics = (
+            "You are an AI assistant that extracts key company report metrics and actionable insights.\n"
+            "Please carefully read the company report text provided and return a valid JSON object with the following structure:\n\n"
+            "{\n"
+            "  \"company_name\": string or null,\n"
+            "  \"year\": string or null,\n"
+            "  \"target_year\": string or null,\n"
+            "  \"key_metrics\": {\n"
+            "      \"employees\": { ... },\n"
+            "      \"investors\": { ... },\n"
+            "      \"customers\": { ... },\n"
+            "      ... any other relevant categories\n"
+            "  },\n"
+            "  \"actionable_insights\": [ list of clear, concise actionable points derived from the report ]\n"
+            "}\n\n"
+        )
 
-    {{
-        "company_name": "extracted company name or null",
-        "year": "report year or null", 
-        "target_year": "target/forecast year or null",
-        "key_metrics": {{
-            "revenue": "revenue figure with currency",
-            "growth_rate": "growth percentage", 
-            "profit_margin": "profit margin percentage",
-            "employees": "number of employees",
-            "customer_satisfaction": "satisfaction score",
-            "market_share": "market share percentage"
-        }},
-        "actionable_insights": [
-            "specific actionable insight 1",
-            "specific actionable insight 2", 
-            "specific actionable insight 3"
-        ],
-        "risk_factors": [
-            "identified risk 1",
-            "identified risk 2"
-        ],
-        "opportunities": [
-            "growth opportunity 1",
-            "growth opportunity 2"
-        ]
-    }}
+    if guidelines:
+        prompt_metrics += (
+            "Also consider the following guidelines while extracting metrics and insights:\n"
+            + guidelines + "\n\n"
+        )
 
-    Guidelines to consider: {guidelines}
+    prompt_metrics += "Report Text:\n" + content + "\n\n"
+    prompt_metrics += "Important:\n"
+    prompt_metrics += "- Only return valid JSON with the fields specified.\n"
+    prompt_metrics += "- Include numerical values where possible.\n"
+    prompt_metrics += "- Be concise and clear in the actionable_insights list."
 
-    Report content: {content[:8000]}  # Limit content for token management
-    """
 
     # Summary prompt
     summary_prompt = f"""
-    Create a concise 3-sentence executive summary of this company report focusing on:
-    1. Overall performance/status
-    2. Key achievements or challenges  
-    3. Future outlook
+    Write a clear, concise summary of this report in no more than 10 sentences. 
+    Focus on main findings, key data points, and conclusions.
+    Write for someone who hasn't read the full report.
 
-    Guidelines: {guidelines}
-    
-    Report: {content[:4000]}
+    {f"Follow these guidelines: {guidelines}" if guidelines else ""}
+
+    Report: {content}
+    """
+
+    # Review prompt
+    review_prompt = f"""
+    Provide a thoughtful review of this report covering:
+    - Quality and clarity of the data presented
+    - Strengths of the analysis
+    - Areas needing improvement
+    - Overall assessment
+
+    Write 4–6 sentences of constructive feedback.
+
+    {f"Consider these guidelines: {guidelines}" if guidelines else ""}
+
+    Report: {content}
     """
 
     try:
-        # Run both requests concurrently for speed
-        tasks = [
-            client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": "You are a financial analysis expert. Return only valid JSON."},
-                    {"role": "user", "content": metrics_prompt}
-                ],
-                temperature=0.1,
-                max_tokens=1000
-            ),
-            client.chat.completions.create(
-                model="gpt-4o-mini", 
-                messages=[
-                    {"role": "system", "content": "You are a business analyst creating executive summaries."},
-                    {"role": "user", "content": summary_prompt}
-                ],
-                temperature=0.2,
-                max_tokens=200
-            )
-        ]
+        # --- Metrics request ---
+        metrics_resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Extract structured data in strict JSON format."},
+                {"role": "user", "content": prompt_metrics},
+            ],
+            temperature=0.0,
+            max_tokens=800,
+        )
 
-        # Wait for both responses
-        metrics_resp, summary_resp = await asyncio.gather(*[
-            asyncio.create_task(asyncio.to_thread(lambda: task)) for task in tasks
-        ])
-
-        # Process metrics response
         metrics_text = metrics_resp.choices[0].message.content.strip()
-        
-        # Clean up JSON response
-        if metrics_text.startswith('```json'):
-            metrics_text = metrics_text.split('```json')[1].split('```')[0]
-        elif metrics_text.startswith('```'):
-            metrics_text = "\n".join(metrics_text.split('\n')[1:-1])
 
-        parsed_metrics = {}
+        # Remove ``` or ```json fences if present
+        metrics_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", metrics_text, flags=re.MULTILINE).strip()
+
+        parsed_metrics = None
         try:
             parsed_metrics = json.loads(metrics_text)
         except json.JSONDecodeError:
-            # Fallback: try to extract JSON from text
-            json_match = re.search(r'\{[\s\S]*\}', metrics_text)
-            if json_match:
+            # Fallback: extract the first {...} block
+            match = re.search(r"\{[\s\S]*\}", metrics_text)
+            if match:
                 try:
-                    parsed_metrics = json.loads(json_match.group(0))
+                    parsed_metrics = json.loads(match.group(0))
                 except json.JSONDecodeError:
-                    parsed_metrics = {"error": "Could not parse metrics"}
+                    parsed_metrics = {}
+            else:
+                parsed_metrics = {}
 
-        # Get summary
+        # --- Summary request ---
+        summary_resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Create clear, informative report summaries."},
+                {"role": "user", "content": summary_prompt},
+            ],
+            temperature=0.2,
+            max_tokens=200,
+        )
         summary = summary_resp.choices[0].message.content.strip()
+
+        # --- Review request ---
+        review_resp = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Provide constructive reviews of reports."},
+                {"role": "user", "content": review_prompt},
+            ],
+            temperature=0.3,
+            max_tokens=300,
+        )
+        review = review_resp.choices[0].message.content.strip()
 
         return {
             "parsed_metrics": parsed_metrics,
-            "summary": summary
+            "summary": summary,
+            "review": review,
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI analysis failed: {str(e)}")
+
 
 @app.post("/analyze", response_model=Dict[str, Any])
 async def analyze_report(
@@ -240,10 +219,6 @@ async def analyze_report(
     report_file: Optional[UploadFile] = File(None),
     guidelines_file: Optional[UploadFile] = File(None)
 ):
-    """
-    Analyze company reports with AI-powered insights extraction
-    Supports both text input and PDF file uploads
-    """
     start_time = time.time()
     
     try:
@@ -288,14 +263,11 @@ async def analyze_report(
         # Build response
         response = ReportAnalysis(
             company_name=parsed_metrics.get("company_name"),
+            report_type=parsed_metrics.get("report_type"),
             year=parsed_metrics.get("year"),
-            target_year=parsed_metrics.get("target_year"),
-            key_metrics=parsed_metrics.get("key_metrics", {}),
-            financial_health_score=calculate_health_score(parsed_metrics.get("key_metrics", {})),
-            actionable_insights=parsed_metrics.get("actionable_insights", []),
-            risk_factors=parsed_metrics.get("risk_factors", []),
-            opportunities=parsed_metrics.get("opportunities", []),
+            important_metrics=parsed_metrics.get("key_metrics", {}),
             summary=summary,
+            review=analysis_result["review"],
             processing_time=processing_time
         )
 
@@ -304,16 +276,10 @@ async def analyze_report(
             "data": response.dict(),
             "meta": {
                 "processing_time_seconds": processing_time,
-                "content_length": len(report_content),
                 "has_guidelines": bool(guidelines_content)
             }
         }
-
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

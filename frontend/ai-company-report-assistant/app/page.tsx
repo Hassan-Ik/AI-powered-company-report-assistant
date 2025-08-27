@@ -22,56 +22,122 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
 
   const handleSubmit = async () => {
-    setLoading(true);
-    setMessages((prev) => [
-  ...prev,
-  { role: "user", content: "Please analyze this company report and provide key metrics and actionable insights." }
-]);
+  setLoading(true);
+  setMessages((prev) => [
+    ...prev,
+    {
+      role: "user",
+      content:
+        "Please analyze this company report and provide key metrics and actionable insights.",
+    },
+  ]);
 
-    try {
-      const formData = new FormData();
-      if (reportFile) formData.append("report_file", reportFile);
-      if (guidelinesFile) formData.append("guidelines_file", guidelinesFile);
-      if (text) formData.append("text", text);
-      if (guidelinesText) formData.append("guidelines_text", guidelinesText);
+  try {
+    const formData = new FormData();
+    if (reportFile) formData.append("report_file", reportFile);
+    if (guidelinesFile) formData.append("guidelines_file", guidelinesFile);
+    if (text) formData.append("text", text);
+    if (guidelinesText) formData.append("guidelines_text", guidelinesText);
 
-      const res = await fetch("http://localhost:8000/analyze", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
+    const res = await fetch("http://localhost:8000/analyze", {
+      method: "POST",
+      body: formData,
+    });
+    const result = await res.json();
+    console.log(result);
 
-      if (data.metrics) {
+    if (result.success && result.data) {
+      const {
+        important_metrics,
+        summary,
+        review,
+        company_name,
+        report_type,
+        year,
+      } = result.data;
+
+      if (important_metrics && Object.keys(important_metrics).length > 0) {
         setMessages((prev) => [
           ...prev,
-          { role: "assistant", content: `Here are the extracted metrics from your report:` },
+          {
+            role: "assistant",
+            content: `Here are the extracted metrics from your ${report_type} report for ${company_name} (${year}):`,
+          },
           {
             role: "assistant",
             content: (
               <pre className="bg-gray-100 p-2 rounded overflow-x-auto">
-                {JSON.stringify(data.metrics, null, 2)}
+                {JSON.stringify(important_metrics, null, 2)}
               </pre>
             ),
           },
         ]);
       }
-      if (data.summary) {
+
+      if (summary) {
         setMessages((prev) => [
           ...prev,
           { role: "assistant", content: `Here’s a quick summary for you:` },
-          { role: "assistant", content: data.summary },
+          { role: "assistant", content: summary },
         ]);
       }
-      if (data.error) {
-        setMessages((prev) => [...prev, { role: "assistant", content: `Error: ${data.error}` }]);
+
+      if (review) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: `Here’s an analyst review based on the report:`,
+          },
+          { role: "assistant", content: review },
+        ]);
       }
-    } catch (err) {
-      console.error(err);
-      setMessages((prev) => [...prev, { role: "assistant", content: "Failed to fetch results." }]);
-    } finally {
-      setLoading(false);
+
+      if (result.meta) {
+        const { processing_time_seconds, has_guidelines } = result.meta;
+
+        if (processing_time_seconds) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `⏱️ Analysis completed in ${processing_time_seconds.toFixed(
+                2
+              )} seconds.`,
+            },
+          ]);
+        }
+
+        if (has_guidelines) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `📘 Guidelines were included in the analysis.`,
+            },
+          ]);
+        }
+      }
+    } else {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `Error: ${result.error || "Unknown error occurred."}`,
+        },
+      ]);
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setMessages((prev) => [
+      ...prev,
+      { role: "assistant", content: "Failed to fetch results." },
+    ]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen p-8 bg-purple-100 flex flex-col items-center">
