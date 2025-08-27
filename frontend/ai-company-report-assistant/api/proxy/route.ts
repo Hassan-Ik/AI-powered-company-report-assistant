@@ -1,13 +1,16 @@
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-  // forward the request body as-is
+  // Convert incoming request to FormData if needed
+  const formData = await req.formData(); // works if request is FormData
+
+  // Forward to backend API
   const response = await fetch(process.env.API_URL!, {
     method: "POST",
-    body: req.body, // stream FormData directly
-    headers: req.headers, // forward headers if needed
+    body: formData, // send FormData
+    // Only set headers if needed; do NOT forward all headers blindly
   });
 
-  const data = await response.json(); // parse backend response
+  const data = await response.json(); // parse backend JSON response
   return NextResponse.json(data);
 }
