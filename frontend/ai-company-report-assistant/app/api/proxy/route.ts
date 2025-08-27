@@ -7,8 +7,7 @@ export async function POST(req: Request) {
   // Forward to backend API
   const response = await fetch(process.env.API_URL!, {
     method: "POST",
-    body: formData, // send FormData
-    // Only set headers if needed; do NOT forward all headers blindly
+    body: formData,
   });
 
   const data = await response.json(); // parse backend JSON response
